@@ -21,12 +21,20 @@ resource "azurerm_virtual_network" "vnet1" {
   location            = azurerm_resource_group.rg3.location
   resource_group_name = azurerm_resource_group.rg3.name
   address_space       = ["10.50.0.0/22"]
+  depends_on = [
+    azurerm_resource_group.rg3
+  ]
+
 }
 resource "azurerm_virtual_network" "vnet2" {
   name                = "vnet-gspl-fileshare-prod-sea-01"
   location            = azurerm_resource_group.rg2.location
   resource_group_name = azurerm_resource_group.rg2.name
   address_space       = ["10.54.0.0/22"]
+  depends_on = [
+    azurerm_resource_group.rg2
+  ]
+
 }
 
 ## subnets
@@ -36,6 +44,11 @@ resource "azurerm_subnet" "subnet1" {
   resource_group_name  = azurerm_resource_group.rg3.name
   virtual_network_name = azurerm_virtual_network.vnet1.name
   address_prefixes     = ["10.50.0.0/24"]
+  depends_on = [
+    azurerm_resource_group.rg3,
+    azurerm_virtual_network.vnet1
+  ]
+
 }
 
 #Network Interfaces
@@ -49,6 +62,11 @@ resource "azurerm_network_interface" "nic1" {
     subnet_id                     = azurerm_subnet.subnet1.id
     private_ip_address_allocation = "Dynamic"
   }
+  depends_on = [
+    azurerm_resource_group.rg3,
+    azurerm_virtual_network.vnet1,
+    azurerm_subnet.subnet1
+  ]
 }
 
 resource "azurerm_network_interface" "nic2" {
@@ -60,8 +78,17 @@ resource "azurerm_network_interface" "nic2" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.subnet1.id
     private_ip_address_allocation = "Dynamic"
+
   }
+  depends_on = [
+    azurerm_resource_group.rg3,
+    azurerm_virtual_network.vnet1,
+    azurerm_subnet.subnet1
+  ]
+
+
 }
+
 
 ## virtual Machines
 
@@ -87,6 +114,11 @@ resource "azurerm_windows_virtual_machine" "vm1" {
     sku       = "2022-Datacenter"
     version   = "latest"
   }
+  depends_on = [
+    azurerm_resource_group.rg3,
+    azurerm_virtual_network.vnet1,
+    azurerm_subnet.subnet1
+  ]
 }
 
 
@@ -112,6 +144,12 @@ resource "azurerm_windows_virtual_machine" "vm2" {
     sku       = "2022-Datacenter"
     version   = "latest"
   }
+  depends_on = [
+    azurerm_resource_group.rg3,
+    azurerm_virtual_network.vnet1,
+    azurerm_subnet.subnet1
+  ]
+
 }
 
 ## Storage account
@@ -123,10 +161,11 @@ resource "azurerm_storage_account" "storageacct1" {
   location                 = azurerm_resource_group.rg2.location
   account_tier             = "Standard"
   account_replication_type = "GRS"
+  depends_on = [
+    azurerm_resource_group.rg2
 
-  tags = {
-    environment = "staging"
-  }
+  ]
+
 }
 
 
